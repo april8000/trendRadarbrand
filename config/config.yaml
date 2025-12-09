@@ -72,7 +72,7 @@ ai_search:
     - "养老体系"
   time_range_hours: 24
   max_results: 15
-  gemini_model: "gemini-1.5-flash"
+  gemini_model: "gemini-1.5-pro"
   relevance_threshold: 5
 
 platforms:

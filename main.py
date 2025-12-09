@@ -284,7 +284,7 @@ def load_config():
             "SEARCH_KEYWORDS": config_data.get("ai_search", {}).get("search_keywords", []),
             "TIME_RANGE_HOURS": config_data.get("ai_search", {}).get("time_range_hours", 24),
             "MAX_RESULTS": config_data.get("ai_search", {}).get("max_results", 15),
-            "GEMINI_MODEL": config_data.get("ai_search", {}).get("gemini_model", "gemini-1.5-flash"),
+            "GEMINI_MODEL": config_data.get("ai_search", {}).get("gemini_model", "gemini-1.5-pro"),
             "RELEVANCE_THRESHOLD": config_data.get("ai_search", {}).get("relevance_threshold", 5),
         },
     }
@@ -5730,7 +5730,7 @@ def run_subscription_mode(sub_manager):
                             "MAX_RESULTS": ai_config.get("max_results", 15),
                             "SERPER_API_KEY": CONFIG.get("AI_SEARCH", {}).get("SERPER_API_KEY"),
                             "GEMINI_API_KEY": CONFIG.get("AI_SEARCH", {}).get("GEMINI_API_KEY"),
-                            "GEMINI_MODEL": "gemini-1.5-flash",
+                            "GEMINI_MODEL": CONFIG.get("AI_SEARCH", {}).get("GEMINI_MODEL", "gemini-1.5-pro"),
                             "RELEVANCE_THRESHOLD": 5
                         }
                     }
