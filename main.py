@@ -284,7 +284,8 @@ def load_config():
             "SEARCH_KEYWORDS": config_data.get("ai_search", {}).get("search_keywords", []),
             "TIME_RANGE_HOURS": config_data.get("ai_search", {}).get("time_range_hours", 24),
             "MAX_RESULTS": config_data.get("ai_search", {}).get("max_results", 15),
-            "GEMINI_MODEL": config_data.get("ai_search", {}).get("gemini_model", "gemini-pro"),
+            "AI_MODEL": config_data.get("ai_search", {}).get("ai_model", "deepseek-ai/DeepSeek-V3"),
+            "AI_API_BASE": config_data.get("ai_search", {}).get("ai_api_base", "https://api.siliconflow.cn/v1"),
             "RELEVANCE_THRESHOLD": config_data.get("ai_search", {}).get("relevance_threshold", 5),
         },
     }
@@ -347,9 +348,9 @@ def load_config():
     config["AI_SEARCH"]["SERPER_API_KEY"] = os.environ.get(
         "SERPER_API_KEY", ""
     ).strip() or ai_search_data.get("serper_api_key", "")
-    config["AI_SEARCH"]["GEMINI_API_KEY"] = os.environ.get(
-        "GEMINI_API_KEY", ""
-    ).strip() or ai_search_data.get("gemini_api_key", "")
+    config["AI_SEARCH"]["AI_API_KEY"] = os.environ.get(
+        "AI_API_KEY", ""
+    ).strip() or ai_search_data.get("ai_api_key", "")
 
     # Bark配置
     config["BARK_URL"] = os.environ.get("BARK_URL", "").strip() or webhooks.get(
@@ -5729,8 +5730,9 @@ def run_subscription_mode(sub_manager):
                             "TIME_RANGE_HOURS": ai_config.get("time_range_hours", 24),
                             "MAX_RESULTS": ai_config.get("max_results", 15),
                             "SERPER_API_KEY": CONFIG.get("AI_SEARCH", {}).get("SERPER_API_KEY"),
-                            "GEMINI_API_KEY": CONFIG.get("AI_SEARCH", {}).get("GEMINI_API_KEY"),
-                            "GEMINI_MODEL": CONFIG.get("AI_SEARCH", {}).get("GEMINI_MODEL", "gemini-pro"),
+                            "AI_API_KEY": CONFIG.get("AI_SEARCH", {}).get("AI_API_KEY"),
+                            "AI_MODEL": CONFIG.get("AI_SEARCH", {}).get("AI_MODEL", "deepseek-ai/DeepSeek-V3"),
+                            "AI_API_BASE": CONFIG.get("AI_SEARCH", {}).get("AI_API_BASE", "https://api.siliconflow.cn/v1"),
                             "RELEVANCE_THRESHOLD": 5
                         }
                     }

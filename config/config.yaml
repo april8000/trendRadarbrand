@@ -60,7 +60,8 @@ ai_search:
   enabled: true
   trigger_threshold: 3
   serper_api_key: ""
-  gemini_api_key: ""
+  ai_api_key: ""  # 硅基流动 API Key
+  ai_api_base: "https://api.siliconflow.cn/v1"  # 硅基流动 API 地址
   search_keywords:
     - "养老保险政策"
     - "养老金调整"
@@ -72,7 +73,7 @@ ai_search:
     - "养老体系"
   time_range_hours: 24
   max_results: 15
-  gemini_model: "gemini-pro"
+  ai_model: "deepseek-ai/DeepSeek-V3"  # 硅基流动模型
   relevance_threshold: 5
 
 platforms:

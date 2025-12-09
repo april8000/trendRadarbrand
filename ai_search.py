@@ -18,11 +18,8 @@ os.environ.pop('HTTPS_PROXY', None)
 os.environ.pop('http_proxy', None)
 os.environ.pop('https_proxy', None)
 
-try:
-    import google.generativeai as genai
-    GEMINI_AVAILABLE = True
-except ImportError:
-    GEMINI_AVAILABLE = False
+# 使用 requests 调用硅基流动 API（OpenAI 兼容格式）
+AI_AVAILABLE = True
 
 
 class AISearchManager:
@@ -40,7 +37,7 @@ class AISearchManager:
         
         # API Keys
         self.serper_api_key = self.ai_config.get("SERPER_API_KEY", "")
-        self.gemini_api_key = self.ai_config.get("GEMINI_API_KEY", "")
+        self.ai_api_key = self.ai_config.get("AI_API_KEY", "")
         
         # 搜索配置
         self.search_keywords = self.ai_config.get("SEARCH_KEYWORDS", [])
@@ -48,8 +45,9 @@ class AISearchManager:
         self.max_results = self.ai_config.get("MAX_RESULTS", 15)
         self.relevance_threshold = self.ai_config.get("RELEVANCE_THRESHOLD", 5)
         
-        # Gemini 配置（默认使用 gemini-pro，更稳定）
-        self.gemini_model_name = self.ai_config.get("GEMINI_MODEL", "gemini-pro")
+        # AI 模型配置（硅基流动）
+        self.ai_model_name = self.ai_config.get("AI_MODEL", "deepseek-ai/DeepSeek-V3")
+        self.ai_api_base = self.ai_config.get("AI_API_BASE", "https://api.siliconflow.cn/v1")
         
         # 验证配置
         self._validate_config()
@@ -59,11 +57,8 @@ class AISearchManager:
         if not self.serper_api_key:
             raise ValueError("未配置 SERPER_API_KEY，请在环境变量或配置文件中设置")
         
-        if not self.gemini_api_key:
-            raise ValueError("未配置 GEMINI_API_KEY，请在环境变量或配置文件中设置")
-        
-        if not GEMINI_AVAILABLE:
-            raise ImportError("未安装 google-generativeai，请运行: pip install google-generativeai")
+        if not self.ai_api_key:
+            raise ValueError("未配置 AI_API_KEY，请在环境变量或配置文件中设置")
         
         if not self.search_keywords:
             raise ValueError("未配置搜索关键词 SEARCH_KEYWORDS")
@@ -89,10 +84,10 @@ class AISearchManager:
             
             print(f"[成功] Serper 搜索到 {len(search_results)} 条结果")
             
-            # 2. 使用 Gemini 筛选
-            filtered_results = self._filter_with_gemini(search_results)
+            # 2. 使用 AI 筛选
+            filtered_results = self._filter_with_ai(search_results)
             
-            print(f"[成功] Gemini 筛选后保留 {len(filtered_results)} 条高质量新闻")
+            print(f"[成功] AI 筛选后保留 {len(filtered_results)} 条高质量新闻")
             
             # 3. 格式化为统一格式
             formatted_results = self._format_results(filtered_results)
@@ -219,9 +214,9 @@ class AISearchManager:
         
         return filtered
     
-    def _filter_with_gemini(self, news_list: List[Dict]) -> List[Dict]:
+    def _filter_with_ai(self, news_list: List[Dict]) -> List[Dict]:
         """
-        使用 Gemini AI 筛选和分析新闻
+        使用硅基流动 AI（DeepSeek-V3）筛选和分析新闻
         
         Args:
             news_list: 搜索结果列表
@@ -230,10 +225,6 @@ class AISearchManager:
             筛选后的高质量新闻列表
         """
         try:
-            # 配置 Gemini
-            genai.configure(api_key=self.gemini_api_key)
-            model = genai.GenerativeModel(self.gemini_model_name)
-            
             # 构建新闻摘要供 AI 分析
             news_summaries = []
             for idx, news in enumerate(news_list):
@@ -246,17 +237,10 @@ class AISearchManager:
                 news_summaries.append(summary)
             
             # 构建 Prompt
-            prompt = f"""你是一个养老资讯分析专家。请分析以下新闻列表，筛选出与养老相关的高质量内容。
-
-**重点关注：**
-1. 养老保险政策（社保、商业养老保险、个人养老金）
-2. 养老金调整和改革
-3. 退休相关政策
-4. 养老服务和产业
-5. 老龄化相关政策
+            prompt = f"""你是一个资讯分析专家。请分析以下新闻列表，筛选出高质量的相关内容。
 
 **评分标准（0-10分）：**
-- 8-10分：高度相关，政策性强或信息价值高，必须保留
+- 8-10分：高度相关，信息价值高，必须保留
 - 5-7分：中度相关，有一定参考价值，可以保留
 - 0-4分：低相关或无关，过滤掉
 
@@ -270,7 +254,7 @@ class AISearchManager:
     {{
       "id": 0,
       "score": 8,
-      "reason": "关于个人养老金政策调整的权威报道"
+      "reason": "关于政策调整的权威报道"
     }}
   ]
 }}
@@ -278,16 +262,41 @@ class AISearchManager:
 只返回评分 >= {self.relevance_threshold} 的新闻。
 """
             
-            print(f"[AI] 正在调用 Gemini {self.gemini_model_name} 进行智能筛选...")
+            print(f"[AI] 正在调用 {self.ai_model_name} 进行智能筛选...")
             
-            # 调用 Gemini（添加重试机制）
+            # 调用硅基流动 API（OpenAI 兼容格式）
             max_retries = 3
             for attempt in range(max_retries):
                 try:
-                    response = model.generate_content(prompt)
+                    api_url = f"{self.ai_api_base}/chat/completions"
+                    headers = {
+                        "Authorization": f"Bearer {self.ai_api_key}",
+                        "Content-Type": "application/json"
+                    }
+                    payload = {
+                        "model": self.ai_model_name,
+                        "messages": [
+                            {"role": "user", "content": prompt}
+                        ],
+                        "temperature": 0.3,
+                        "max_tokens": 2000
+                    }
                     
-                    # 解析响应
-                    response_text = response.text.strip()
+                    # 发送请求
+                    session = requests.Session()
+                    session.trust_env = False  # 禁用环境变量代理
+                    response = session.post(api_url, headers=headers, json=payload, timeout=60)
+                    
+                    if response.status_code != 200:
+                        raise Exception(f"API 返回错误: {response.status_code}, {response.text[:200]}")
+                    
+                    result_data = response.json()
+                    
+                    # 提取响应内容
+                    if "choices" in result_data and len(result_data["choices"]) > 0:
+                        response_text = result_data["choices"][0]["message"]["content"].strip()
+                    else:
+                        raise Exception(f"API 响应格式错误: {result_data}")
                     
                     # 提取 JSON（去除可能的 markdown 代码块标记）
                     if "```json" in response_text:
@@ -302,7 +311,7 @@ class AISearchManager:
                     filtered_news = [news_list[idx] for idx in filtered_ids if idx < len(news_list)]
                     
                     # 输出筛选详情
-                    print(f"   [成功] Gemini 分析完成，保留 {len(filtered_news)}/{len(news_list)} 条")
+                    print(f"   [成功] AI 分析完成，保留 {len(filtered_news)}/{len(news_list)} 条")
                     for item in result.get("filtered_news", [])[:3]:  # 显示前3条
                         print(f"      • ID {item['id']} (评分: {item['score']}/10): {item['reason']}")
                     if len(result.get("filtered_news", [])) > 3:
@@ -313,7 +322,8 @@ class AISearchManager:
                 except json.JSONDecodeError as e:
                     if attempt < max_retries - 1:
                         print(f"   [警告] JSON 解析失败，重试 ({attempt + 1}/{max_retries})...")
-                        print(f"   响应内容: {response_text[:200]}...")
+                        if 'response_text' in locals():
+                            print(f"   响应内容: {response_text[:200]}...")
                         time.sleep(1)
                         continue
                     else:
@@ -324,18 +334,19 @@ class AISearchManager:
                 
                 except Exception as e:
                     if attempt < max_retries - 1:
-                        print(f"   [警告] Gemini 调用失败，重试 ({attempt + 1}/{max_retries})...")
+                        print(f"   [警告] AI 调用失败，重试 ({attempt + 1}/{max_retries})...")
+                        print(f"   错误: {str(e)[:100]}")
                         time.sleep(2)
                         continue
                     else:
-                        print(f"   [错误] Gemini 调用失败: {e}")
+                        print(f"   [错误] AI 调用失败: {e}")
                         # 降级策略：返回所有结果
                         return news_list
             
             return news_list
             
         except Exception as e:
-            print(f"[错误] Gemini 筛选失败: {e}")
+            print(f"[错误] AI 筛选失败: {e}")
             # 降级策略：返回所有结果
             return news_list
     
@@ -393,7 +404,7 @@ def search_pension_news_with_ai(config: Dict) -> List[Dict]:
             return []
         
         # 检查 API Keys
-        if not ai_config.get("SERPER_API_KEY") or not ai_config.get("GEMINI_API_KEY"):
+        if not ai_config.get("SERPER_API_KEY") or not ai_config.get("AI_API_KEY"):
             print("[警告] AI 搜索功能已启用但未配置 API Keys，跳过")
             return []
         
