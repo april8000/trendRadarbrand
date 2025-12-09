@@ -5861,6 +5861,8 @@ def generate_subscription_report(subscription: Dict, news_data: List[Dict]) -> s
     
     # 构建报告
     report = []
+    # 添加订阅名称作为标题，方便区分不同订阅
+    report.append(f"# 📰 {sub_name}\n\n")
     report.append(f"**总新闻数：** {len(news_data)}\n\n\n\n")
     
     # 关键词信息（可选，如果需要的话）
