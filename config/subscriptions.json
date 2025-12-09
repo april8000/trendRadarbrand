@@ -22,6 +22,11 @@
             "type": "wework",
             "url": "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=4b07a9e6-68a2-4713-b72d-f358e5857115",
             "name": "养老资讯群"
+          },
+          {
+            "type": "wework",
+            "url": "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=c4aa29d6-db3f-43c5-a974-af2067e2bd8d",
+            "name": "养老&c宠物资讯群"
           }
         ],
         "ai_search": {
@@ -66,6 +71,11 @@
             "type": "wework",
             "url": "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=20f1b0e4-18c8-4b8e-a9c5-f1caca3a269b",
             "name": "宠物医疗群"
+          },
+          {
+            "type": "wework",
+            "url": "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=c4aa29d6-db3f-43c5-a974-af2067e2bd8d",
+            "name": "养老&c宠物资讯群"
           }
         ],
         "ai_search": {
