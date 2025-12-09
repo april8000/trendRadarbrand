@@ -91,6 +91,10 @@ class AISearchManager:
             # 2. 使用 AI 筛选
             filtered_results = self._filter_with_ai(search_results)
             
+            # 限制推送条数，最多 10 条
+            if filtered_results:
+                filtered_results = filtered_results[:10]
+
             print(f"[成功] AI 筛选后保留 {len(filtered_results)} 条高质量新闻")
             
             # 3. 格式化为统一格式
