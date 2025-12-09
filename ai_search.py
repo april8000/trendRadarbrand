@@ -2,7 +2,7 @@
 
 """
 AI 智能搜索模块
-当热搜筛选结果不足时，自动搜索养老相关资讯并使用 AI 筛选
+当热搜筛选结果不足时，自动搜索相关资讯并使用 AI 筛选
 """
 
 import json
@@ -93,7 +93,7 @@ class AISearchManager:
             formatted_results = self._format_results(filtered_results)
             
             print("="*60)
-            print(f"[完成] AI 搜索完成，共获取 {len(formatted_results)} 条养老资讯")
+            print(f"[完成] AI 搜索完成，共获取 {len(formatted_results)} 条资讯")
             print("="*60 + "\n")
             
             return formatted_results
@@ -388,13 +388,13 @@ class AISearchManager:
 
 def search_pension_news_with_ai(config: Dict) -> List[Dict]:
     """
-    便捷函数：搜索养老资讯
+    便捷函数：使用AI搜索相关资讯
     
     Args:
-        config: 配置字典
+        config: 配置字典，包含 AI_SEARCH 配置项
         
     Returns:
-        养老资讯列表
+        筛选后的资讯列表
     """
     try:
         ai_config = config.get("AI_SEARCH", {})

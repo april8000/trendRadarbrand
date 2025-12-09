@@ -5795,7 +5795,14 @@ def run_subscription_mode(sub_manager):
                 
                 try:
                     # 发送推送
+                    # 提取并显示webhook key用于验证
+                    webhook_key_display = "未知"
+                    if "key=" in webhook_url:
+                        key_part = webhook_url.split("key=")[1].split("&")[0]
+                        webhook_key_display = f"...{key_part[-12:]}"  # 显示最后12位
+                    
                     print(f"      [推送] 正在推送到: {webhook_name} ({webhook_type})")
+                    print(f"      [调试] Webhook URL key: {webhook_key_display}")
                     if webhook_type == "wework":
                         send_wework_message(webhook_url, report_content)
                     elif webhook_type == "feishu":
