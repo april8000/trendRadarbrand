@@ -27,11 +27,6 @@
             "type": "wework",
             "url": "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=4b07a9e6-68a2-4713-b72d-f358e5857115",
             "name": "养老资讯群"
-          },
-          {
-            "type": "wework",
-            "url": "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=024d1c8b-a1b9-4ea8-8f59-0283c43fd9db",
-            "name": "养老资讯群"
           }
         ],
         "ai_search": {
@@ -49,8 +44,8 @@
           "timezone": "Asia/Shanghai"
         },
         "xhs": {
-          "enabled": true,
-          "keywords": ["养老", "养老金"],
+          "enabled": false,
+          "keywords": ["商业养老保险", "养老保险"],
           "limit": 20,
           "push_limit": 10,
           "history_days": 15,
@@ -84,12 +79,7 @@
             "type": "wework",
             "url": "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=20f1b0e4-18c8-4b8e-a9c5-f1caca3a269b",
             "name": "宠物医疗群"
-          },
-          {
-            "type": "wework",
-            "url": "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=ac254eec-4d02-4acd-82ec-d2bdb1a6e7bc",
-            "name": "宠物医疗资讯订阅"
-        }
+          }
         ],
         "ai_search": {
           "enabled": true,
@@ -111,7 +101,7 @@
         },
         "xhs": {
           "enabled": true,
-          "keywords": ["宠物医疗", "宠物医院"],
+          "keywords": ["宠物险", "宠物医疗"],
           "limit": 20,
           "push_limit": 10,
           "history_days": 15,
@@ -187,11 +177,6 @@
             "type": "wework",
             "url": "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=4b07a9e6-68a2-4713-b72d-f358e5857115",
             "name": "医美资讯群内部"
-          },
-          {
-            "type": "wework",
-            "url": "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=86fc3c01-6cb4-41a2-96cb-7bd840d1d200",
-            "name": "医美资讯群"
           }
         ],
         "ai_search": {
@@ -211,7 +196,7 @@
         },
         "xhs": {
           "enabled": true,
-          "keywords": ["医美"],
+          "keywords": ["医美保险"],
           "limit": 20,
           "push_limit": 10,
           "history_days": 15,
