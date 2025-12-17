@@ -6230,10 +6230,12 @@ def generate_subscription_report(
                 "is_new": False,
             }
             formatted_title = format_title_for_platform("wework", title_data, show_source=False)
-            if likes is not None:
-                report.append(f"{idx}. {formatted_title}（点赞 {likes}）\n\n")
-            else:
-                report.append(f"{idx}. {formatted_title}\n\n")
+            # 暂时隐藏点赞数，等接口返回正确后再展示
+            # if likes is not None:
+            #     report.append(f"{idx}. {formatted_title}（点赞 {likes}）\n\n")
+            # else:
+            #     report.append(f"{idx}. {formatted_title}\n\n")
+            report.append(f"{idx}. {formatted_title}\n\n")
     
     # 添加更新时间（和之前格式一致）
     now = get_beijing_time()
