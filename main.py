@@ -288,6 +288,8 @@ def load_config():
             "AI_API_BASE": config_data.get("ai_search", {}).get("ai_api_base", "https://api.siliconflow.cn/v1"),
             "RELEVANCE_THRESHOLD": config_data.get("ai_search", {}).get("relevance_threshold", 5),
         },
+        # 小红书配置（原始 YAML 整段挂载，供订阅模式使用）
+        "XHS": config_data.get("xhs", {}),
     }
 
     # 通知渠道配置（环境变量优先）
