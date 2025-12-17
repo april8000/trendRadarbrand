@@ -47,6 +47,14 @@
           "enabled": true,
           "cron": "0 23 * * *",
           "timezone": "Asia/Shanghai"
+        },
+        "xhs": {
+          "enabled": true,
+          "keywords": ["养老", "养老金"],
+          "limit": 20,
+          "push_limit": 10,
+          "history_days": 15,
+          "section_title": "小红书热帖（养老）"
         }
       },
       {
@@ -100,6 +108,14 @@
           "enabled": true,
           "cron": "0 23 * * *",
           "timezone": "Asia/Shanghai"
+        },
+        "xhs": {
+          "enabled": true,
+          "keywords": ["宠物医疗", "宠物医院"],
+          "limit": 20,
+          "push_limit": 10,
+          "history_days": 15,
+          "section_title": "小红书热帖（宠物医疗）"
         }
       },
       {
@@ -141,6 +157,14 @@
           "enabled": true,
           "cron": "0 23 * * *",
           "timezone": "Asia/Shanghai"
+        },
+        "xhs": {
+          "enabled": true,
+          "keywords": ["AI", "人工智能"],
+          "limit": 20,
+          "push_limit": 10,
+          "history_days": 15,
+          "section_title": "小红书热帖（AI）"
         }
       },
       {
@@ -184,6 +208,14 @@
           "enabled": true,
           "cron": "0 23 * * *",
           "timezone": "Asia/Shanghai"
+        },
+        "xhs": {
+          "enabled": true,
+          "keywords": ["医美"],
+          "limit": 20,
+          "push_limit": 10,
+          "history_days": 15,
+          "section_title": "小红书热帖（医美）"
         }
       }
     ],

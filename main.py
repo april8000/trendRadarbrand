@@ -11,7 +11,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.header import Header
 from email.utils import formataddr, formatdate, make_msgid
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Dict, List, Tuple, Optional, Union
 
@@ -5664,6 +5664,133 @@ def deduplicate_news_items(news_list):
     return deduped
 
 
+def fetch_xhs_hot_posts(keyword: str, limit: int, xhs_config: Dict) -> List[Dict]:
+    """
+    调用小红书热榜接口，按点赞数获取前 N 条数据
+    """
+    base_url = xhs_config.get("base_url")
+    timeout = xhs_config.get("timeout_seconds", 15)
+    if not base_url:
+        return []
+
+    payload = {
+        "keyword": keyword,
+        "limit": limit,
+        "sort_by": "最多点赞",
+    }
+    headers = {"Content-Type": "application/json"}
+
+    try:
+        resp = requests.post(base_url, headers=headers, json=payload, timeout=timeout)
+        if resp.status_code != 200:
+            print(f"   ⚠️ 小红书接口返回非200状态码: {resp.status_code}")
+            return []
+        data = resp.json()
+    except Exception as e:
+        print(f"   ⚠️ 调用小红书接口失败: {str(e)[:100]}")
+        return []
+
+    # 根据实际返回结构进行字段映射，这里做通用兼容
+    posts = []
+    items = data if isinstance(data, list) else data.get("data") or data.get("items") or []
+    for item in items:
+        # 兼容不同字段名
+        note_id = item.get("id") or item.get("note_id") or item.get("noteId")
+        url = item.get("url") or item.get("link") or ""
+        title = item.get("title") or item.get("desc") or ""
+        likes = item.get("likes") or item.get("liked_count") or item.get("like_count")
+        posts.append(
+            {
+                "id": note_id or url or title,
+                "url": url,
+                "title": title,
+                "likes": likes,
+                "raw": item,
+            }
+        )
+
+    return posts
+
+
+def load_xhs_history(path: Path) -> Dict:
+    if not path.exists():
+        return {}
+    try:
+        with path.open("r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+
+def save_xhs_history(path: Path, history: Dict) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", encoding="utf-8") as f:
+        json.dump(history, f, ensure_ascii=False, indent=2)
+
+
+def filter_xhs_posts_by_history(
+    subscription_id: str,
+    keyword: str,
+    posts: List[Dict],
+    history: Dict,
+    history_days: int,
+) -> Tuple[List[Dict], Dict]:
+    """
+    基于历史记录做跨天去重：同一订阅+关键词在最近 N 天内只推送一次
+    """
+    if not posts:
+        return posts, history
+
+    sub_hist = history.setdefault(subscription_id, {})
+    kw_hist = sub_hist.setdefault(keyword, [])
+
+    # 清理过期记录
+    cutoff = datetime.now().date() - timedelta(days=history_days)
+    valid_records = []
+    seen_ids = set()
+    seen_urls = set()
+
+    for rec in kw_hist:
+        try:
+            rec_date = datetime.strptime(rec.get("date", ""), "%Y-%m-%d").date()
+        except Exception:
+            continue
+        if rec_date >= cutoff:
+            rid = rec.get("id") or ""
+            rurl = rec.get("url") or ""
+            if rid:
+                seen_ids.add(rid)
+            if rurl:
+                seen_urls.add(rurl)
+            valid_records.append(rec)
+
+    kw_hist[:] = valid_records
+
+    filtered = []
+    today_str = datetime.now().strftime("%Y-%m-%d")
+
+    for p in posts:
+        pid = (p.get("id") or "").strip()
+        url = (p.get("url") or "").strip()
+
+        if pid and pid in seen_ids:
+            continue
+        if url and url in seen_urls:
+            continue
+
+        filtered.append(p)
+
+        if pid:
+            seen_ids.add(pid)
+        if url:
+            seen_urls.add(url)
+
+        kw_hist.append({"id": pid, "url": url, "date": today_str})
+
+    history[subscription_id][keyword] = kw_hist
+    return filtered, history
+
+
 def run_subscription_mode(sub_manager):
     """
     多订阅模式执行
@@ -5807,9 +5934,50 @@ def run_subscription_mode(sub_manager):
             if not matched_news:
                 print(f"   ⚠️ 没有匹配的新闻，跳过推送")
                 continue
+
+            # 小红书专栏（按订阅配置）
+            xhs_global = CONFIG.get("xhs", {}) or CONFIG.get("XHS", {})
+            xhs_posts_for_report: List[Dict] = []
+            if xhs_global.get("enabled", False):
+                sub_xhs = subscription.get("xhs", {})
+                if sub_xhs.get("enabled", False):
+                    xhs_keywords = sub_xhs.get("keywords") or []
+                    if not xhs_keywords:
+                        # 若未配置单独关键词，则尝试使用订阅主关键词的第一个
+                        normal_kws = subscription.get("keywords", {}).get("normal", [])
+                        if normal_kws:
+                            xhs_keywords = [normal_kws[0]]
+                    if xhs_keywords:
+                        xhs_keyword = xhs_keywords[0]
+                        limit = sub_xhs.get("limit", xhs_global.get("default_limit", 20))
+                        history_days = sub_xhs.get("history_days", 15)
+                        push_limit = sub_xhs.get("push_limit", 10)
+
+                        print(f"   📎 小红书专栏启用，关键词: {xhs_keyword}，limit={limit}，history_days={history_days}")
+                        raw_posts = fetch_xhs_hot_posts(xhs_keyword, limit, xhs_global)
+
+                        if raw_posts:
+                            history_path = Path("output") / "xhs_history.json"
+                            history = load_xhs_history(history_path)
+                            filtered_posts, new_history = filter_xhs_posts_by_history(
+                                sub_id, xhs_keyword, raw_posts, history, history_days
+                            )
+                            save_xhs_history(history_path, new_history)
+
+                            if filtered_posts:
+                                xhs_posts_for_report = filtered_posts[:push_limit]
+                                print(
+                                    f"   📌 小红书原始 {len(raw_posts)} 条，"
+                                    f"历史去重后 {len(filtered_posts)} 条，"
+                                    f"本次展示 {len(xhs_posts_for_report)} 条"
+                                )
+                            else:
+                                print("   ℹ️ 小红书数据在历史窗口内均已推送过，本次不展示")
+                        else:
+                            print("   ℹ️ 小红书接口未返回数据或调用失败")
             
             # 生成报告
-            report_content = generate_subscription_report(subscription, matched_news)
+            report_content = generate_subscription_report(subscription, matched_news, xhs_posts_for_report)
             
             # 推送到所有配置的webhook
             webhooks = sub_manager.get_webhooks(subscription)
@@ -5931,7 +6099,11 @@ def get_subscription_emoji(subscription: Dict) -> str:
         return "📰"
 
 
-def generate_subscription_report(subscription: Dict, news_data: List[Dict]) -> str:
+def generate_subscription_report(
+    subscription: Dict,
+    news_data: List[Dict],
+    xhs_posts: Optional[List[Dict]] = None,
+) -> str:
     """
     为订阅生成报告内容（使用和之前一样的格式，标题和链接合并）
     
@@ -5994,6 +6166,23 @@ def generate_subscription_report(subscription: Dict, news_data: List[Dict]) -> s
     
     if len(news_data) > 50:
         report.append(f"\n... 还有 {len(news_data) - 50} 条新闻未显示\n")
+    
+    # 小红书区块
+    if xhs_posts:
+        xhs_cfg = subscription.get("xhs", {})
+        section_title = xhs_cfg.get("section_title", "小红书热帖")
+        report.append(f"\n\n## {section_title}\n\n")
+        for idx, post in enumerate(xhs_posts, 1):
+            title = post.get("title") or "无标题"
+            url = post.get("url") or ""
+            likes = post.get("likes")
+            if likes is not None:
+                report.append(f"{idx}. {title}（点赞 {likes}）\n")
+            else:
+                report.append(f"{idx}. {title}\n")
+            if url:
+                report.append(f"{url}\n")
+            report.append("\n")
     
     # 添加更新时间（和之前格式一致）
     now = get_beijing_time()
