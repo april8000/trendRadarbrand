@@ -6203,13 +6203,23 @@ def generate_subscription_report(
             title = post.get("title") or "无标题"
             url = post.get("url") or ""
             likes = post.get("likes")
+            # 复用统一的格式化逻辑，确保与主新闻展示风格一致
+            title_data = {
+                "title": title,
+                "url": url,
+                "mobile_url": url,
+                "source_name": "小红书",
+                "ranks": [],
+                "rank_threshold": 10,
+                "time_display": "",
+                "count": 1,
+                "is_new": False,
+            }
+            formatted_title = format_title_for_platform("wework", title_data, show_source=False)
             if likes is not None:
-                report.append(f"{idx}. {title}（点赞 {likes}）\n")
+                report.append(f"{idx}. {formatted_title}（点赞 {likes}）\n\n")
             else:
-                report.append(f"{idx}. {title}\n")
-            if url:
-                report.append(f"{url}\n")
-            report.append("\n")
+                report.append(f"{idx}. {formatted_title}\n\n")
     
     # 添加更新时间（和之前格式一致）
     now = get_beijing_time()
