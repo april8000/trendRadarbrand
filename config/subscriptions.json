@@ -217,6 +217,50 @@
           "history_days": 15,
           "section_title": "小红书热帖（医美）"
         }
+      },
+      {
+        "id": "sub_new_productivity",
+        "name": "新质生产力（原新能源）订阅",
+        "enabled": true,
+        "keywords": {
+          "normal": [
+            "低空经济", "无人机", "充电桩", "光伏",
+            "网络安全", "电子账户", "游戏开发", "游戏账户交易"
+          ],
+          "required": [],
+          "excluded": [],
+          "limit": 0
+        },
+        "webhooks": [
+          {
+            "type": "wework",
+            "url": "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=23d87180-3dbc-4e71-a82b-dc77ec89de51",
+            "name": "新质生产力资讯群"
+          }
+        ],
+        "ai_search": {
+          "enabled": true,
+          "trigger_threshold": 5,
+          "search_keywords": [
+            "低空经济", "无人机", "充电桩", "光伏",
+            "网络安全", "电子账户", "游戏开发", "游戏账户交易"
+          ],
+          "time_range_hours": 24,
+          "max_results": 30
+        },
+        "schedule": {
+          "enabled": true,
+          "cron": "15 23 * * *",
+          "timezone": "Asia/Shanghai"
+        },
+        "xhs": {
+          "enabled": true,
+          "keywords": ["低空经济", "无人机", "充电桩", "光伏"],
+          "limit": 5,
+          "push_limit": 5,
+          "history_days": 15,
+          "section_title": "小红书热帖（新质生产力）"
+        }
       }
     ],
     "global_settings": {
