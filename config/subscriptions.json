@@ -236,6 +236,11 @@
             "type": "wework",
             "url": "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=23d87180-3dbc-4e71-a82b-dc77ec89de51",
             "name": "新质生产力资讯群"
+          },
+          {
+            "type": "wework",
+            "url": "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=6e2c4e3b-1641-4085-b5f0-09f2adaae293",
+            "name": "内部新质生产力资讯群"
           }
         ],
         "ai_search": {
@@ -250,7 +255,7 @@
         },
         "schedule": {
           "enabled": true,
-          "cron": "15 23 * * *",
+          "cron": "30 23 * * *",
           "timezone": "Asia/Shanghai"
         },
         "xhs": {
