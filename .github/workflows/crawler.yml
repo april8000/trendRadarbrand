@@ -1,0 +1,104 @@
+name: Hot News Crawler
+
+on:
+  # 定时运行（北京时间每天 16:00 = UTC 8:00）
+  schedule:
+    - cron: "0 8 * * *"
+  # 手动触发
+  workflow_dispatch:
+  # 支持从外部 API 触发
+  repository_dispatch:
+    types: [crawler]
+
+jobs:
+  crawl-and-push:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      # 1. 检出代码
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. 设置 Python 环境
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+          cache: "pip"
+
+      # 3. 安装依赖
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # 4. 配置环境变量（关键步骤：将 Secrets 传递给环境变量）
+      - name: Configure environment variables
+        env:
+          # AI 搜索相关 Secrets
+          SERPER_API_KEY: ${{ secrets.SERPER_API_KEY }}
+          AI_API_KEY: ${{ secrets.AI_API_KEY }}
+          # 通知渠道 Secrets
+          FEISHU_WEBHOOK_URL: ${{ secrets.FEISHU_WEBHOOK_URL }}
+          DINGTALK_WEBHOOK_URL: ${{ secrets.DINGTALK_WEBHOOK_URL }}
+          WEWORK_WEBHOOK_URL: ${{ secrets.WEWORK_WEBHOOK_URL }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+          EMAIL_TO: ${{ secrets.EMAIL_TO }}
+          EMAIL_SMTP_SERVER: ${{ secrets.EMAIL_SMTP_SERVER }}
+          EMAIL_SMTP_PORT: ${{ secrets.EMAIL_SMTP_PORT }}
+          BARK_URL: ${{ secrets.BARK_URL }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          echo "环境变量已配置"
+          echo "SERPER_API_KEY 长度: ${#SERPER_API_KEY}"
+          if [ -n "$AI_API_KEY" ]; then
+            echo "AI_API_KEY 已配置"
+          else
+            echo "AI_API_KEY 未配置"
+          fi
+
+      # 5. 运行爬虫
+      - name: Run crawler
+        env:
+          # 再次确保环境变量可用
+          SERPER_API_KEY: ${{ secrets.SERPER_API_KEY }}
+          AI_API_KEY: ${{ secrets.AI_API_KEY }}
+          FEISHU_WEBHOOK_URL: ${{ secrets.FEISHU_WEBHOOK_URL }}
+          DINGTALK_WEBHOOK_URL: ${{ secrets.DINGTALK_WEBHOOK_URL }}
+          WEWORK_WEBHOOK_URL: ${{ secrets.WEWORK_WEBHOOK_URL }}
+        run: |
+          echo "=========================================="
+          echo "开始执行 TrendRadar 爬虫"
+          echo "=========================================="
+          python main.py
+          echo "爬虫执行完成"
+
+      # 6. 提交结果文件（如果有变化）
+      - name: Commit results
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # 检查是否有文件变更
+          if git diff --stat | grep -q .; then
+            echo "发现有文件变更，自动提交..."
+            git add output/
+            git commit -m "Update: $(date '+%Y年%m月%d日 %H:%M') - 自动更新运行结果"
+            git push
+          else
+            echo "没有文件变更，无需提交"
+          fi
+        shell: bash
+        continue-on-error: true
+
+      # 7. 通知失败（如果失败）
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "爬虫执行失败，请查看日志"
+          exit 1
